@@ -13,6 +13,7 @@ public class KafkaProducer {
     public KafkaProducer(@Value("${general.kafka-topic}") String topic, KafkaTemplate<String, Transaction> kafkaTemplate) {
         this.topic = topic;
         this.kafkaTemplate = kafkaTemplate;
+        System.out.println("Producer topic = " + topic);
     }
 
     public void send(String transactionLine) {

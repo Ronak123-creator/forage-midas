@@ -35,12 +35,4 @@ public class KafkaConsumerConfig {
         );
     }
 
-//    @Bean(name = "transactionKafkaListenerContainerFactory")
-//    public ConcurrentKafkaListenerContainerFactory<String,Transaction> transactionConcurrentKafkaListenerContainerFactory(){
-//        ConcurrentKafkaListenerContainerFactory<String, Transaction> factory =
-//                new ConcurrentKafkaListenerContainerFactory<>();
-//        factory.setConsumerFactory(transactionConsumerFactory());
-//
-//        return factory;
-//    }
 }

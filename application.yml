@@ -16,21 +16,21 @@ spring:
     password:
   jpa:
     hibernate:
-      ddl-auto: update
+    ddl-auto: create-drop
     open-in-view: false
   h2:
     console:
       enabled: true
 
   kafka:
-    bootstrap-servers: ${spring.embedded.kafka.brokers}
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
     consumer:
       group-id: midas-core
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "com.jpmc.midascore.foundation"
+        spring.json.trusted.packages: "*"
         spring.json.value.default.type: com.jpmc.midascore.foundation.Transaction
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
