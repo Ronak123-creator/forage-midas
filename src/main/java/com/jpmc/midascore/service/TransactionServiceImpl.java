@@ -3,22 +3,35 @@ package com.jpmc.midascore.service;
 import com.jpmc.midascore.component.DatabaseConduit;
 import com.jpmc.midascore.entity.TransactionRecord;
 import com.jpmc.midascore.entity.UserRecord;
+import com.jpmc.midascore.foundation.Incentive;
+import com.jpmc.midascore.foundation.Transaction;
 import com.jpmc.midascore.repository.TransactionRecordRepository;
 import com.jpmc.midascore.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService{
 
     private final TransactionRecordRepository transactionRecordRepository;
     private final UserRepository userRepository;
-    private final DatabaseConduit databaseConduit;
+    private final RestTemplate restTemplate;
+    private final String incentiveUrl;
 
+    public TransactionServiceImpl(TransactionRecordRepository transactionRecordRepository,
+                                  UserRepository userRepository, RestTemplate restTemplate,
+                                  @Value("${incentive.api.url:http://localhost:8080/incentive}")
+                                  String incentiveUrl) {
+        this.transactionRecordRepository = transactionRecordRepository;
+        this.userRepository = userRepository;
+        this.restTemplate = restTemplate;
+        this.incentiveUrl = incentiveUrl;
+    }
 
     @Override
     @Transactional
@@ -36,21 +49,35 @@ public class TransactionServiceImpl implements TransactionService{
         if(sender.getBalance() < amount){
             return;
         }
+
+        float incentive = 0f;
+        try {
+            Incentive res = restTemplate.postForObject(
+                    incentiveUrl,
+                    new Transaction(senderId,recipientId,amount),
+                    Incentive.class
+            );
+            if(res != null && res.getAmount() >=0){
+                incentive = res.getAmount();
+            }
+        }catch (Exception e){
+            incentive = 0f;
+        }
+
         sender.setBalance(sender.getBalance() - amount);
-        recipient.setBalance(recipient.getBalance() + amount);
+        recipient.setBalance(recipient.getBalance() + amount + incentive);
 
         transactionRecordRepository.save(
                 new TransactionRecord(
                         sender,
                         recipient,
-                        amount
+                        amount,
+                        incentive
                 )
         );
+        transactionRecordRepository.save(new TransactionRecord(sender, recipient, amount, incentive));
         userRepository.save(sender);
         userRepository.save(recipient);
-
-        // NOW SAVE TRANSACTION — links to refreshed entities
-        transactionRecordRepository.save(new TransactionRecord(sender, recipient, amount));
 
     }
 

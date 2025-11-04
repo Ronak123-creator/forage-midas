@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8085
 
 app:
   kafka:
@@ -16,7 +16,7 @@ spring:
     password:
   jpa:
     hibernate:
-    ddl-auto: create-drop
+    ddl-auto: update
     open-in-view: false
   h2:
     console:
